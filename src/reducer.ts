@@ -1,18 +1,21 @@
-import { Loop, liftState } from 'redux-loop';
+import { Cmd, Loop, liftState, loop } from 'redux-loop';
 import { compose } from 'redux';
 import { Actions } from './types/actions.type';
 import { Picture } from './types/picture.type';
 import data from './fake-datas.json'
+import { cmdFetch } from './commands';
+import { fetchCatsRequest } from './actions';
+import ApiResponse from './types/api.type';
 
 export type State = {
   counter: number,
-  pictures: Array<Picture>,
+  pictures: ApiResponse,
   selected: Picture | null
 }
 
 export const defaultState: State = {
   counter: 4,
-  pictures: data.slice(0, 4),
+  pictures: { type : "SUCCESS",  payload : []},
   selected : null
 }
 
@@ -22,7 +25,11 @@ export const reducer = (state: State | undefined, action: Actions) : State => {
   switch (action.type) {
     case 'INCREMENT':
       let pictureIndex : number = Math.floor(Math.random() * (9));
-      return { ...state, counter: state.counter + 1, pictures: state.pictures.concat([data[pictureIndex]]), selected : state.selected};
+      switch (state.pictures.type) {
+        case ("SUCCESS") :
+          
+          return { ...state, counter: state.counter + 1, pictures: state.pictures.concat([data[pictureIndex]]), selected : state.selected};
+      }
     case 'DECREMENT':
       if (counterSelector(state) >= 4) {
         tmpPictures = state.pictures.slice(0, counterSelector(state) - 1);
@@ -39,11 +46,11 @@ export const reducer = (state: State | undefined, action: Actions) : State => {
     case 'CLOSE_MODAL':
       throw 'Not Implemented';
     case 'FETCH_CATS_REQUEST':
-      throw 'Not Implemented';
+      return loop(state, cmdFetch(fetchCatsRequest()))[0];
     case 'FETCH_CATS_COMMIT':
-      throw 'Not Implemented';
+      return { ...state, counter: state.counter, pictures: action.payload, selected : state.selected }
     case 'FETCH_CATS_ROLLBACK':
-      throw 'Not Implemented';
+      return loop(state, Cmd.run(() => console.log(action.error)))[0];
   }
 };
 
