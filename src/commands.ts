@@ -1,3 +1,4 @@
+import { ApiResponse } from './types/api.type';
 import { Cmd } from 'redux-loop';
 import { fetchCatsCommit, fetchCatsRollback } from './actions';
 import { FetchCatsRequest } from './types/actions.type';
@@ -7,7 +8,12 @@ export const cmdFetch = (action: FetchCatsRequest) =>
     () => {
       return fetch(action.path, {
         method: action.method,
-      }).then(checkStatus);
+      }).then(checkStatus).then((value) => {
+        return {
+          type : "SUCCESS",
+          payload: value.json(),
+        }
+      });
     },
     {
       successActionCreator: fetchCatsCommit, // (equals to (payload) => fetchCatsCommit(payload))
